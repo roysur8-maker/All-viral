@@ -52,7 +52,7 @@ class MainViewModel : ViewModel() {
         
         _state.value = GenerationState.Loading
 
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val prompt = """
                     Act as an expert social media manager and viral content creator.
@@ -87,25 +87,29 @@ class MainViewModel : ViewModel() {
                 var text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
                     ?: "Failed to generate content."
                 
-                // Try to parse JSON output
-                text = text.trim()
-                if (text.startsWith("```json")) {
-                    text = text.removePrefix("```json").removeSuffix("```").trim()
-                } else if (text.startsWith("```")) {
-                    text = text.removePrefix("```").removeSuffix("```").trim()
-                }
-
+                // Robust JSON string extraction
                 var parsedCaption = ""
                 var parsedHashtags = ""
                 var parsedDescription = ""
-
+                
+                var jsonStr = text
+                val startIndex = text.indexOf('{')
+                val endIndex = text.lastIndexOf('}')
+                if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+                    jsonStr = text.substring(startIndex, endIndex + 1)
+                }
+                
                 try {
-                    val jsonObj = JSONObject(text)
+                    val jsonObj = JSONObject(jsonStr)
                     parsedCaption = jsonObj.optString("caption", "")
                     parsedHashtags = jsonObj.optString("hashtags", "")
                     parsedDescription = jsonObj.optString("description", "")
                 } catch (e: Exception) {
                     // Fallback if parsing fails
+                    parsedCaption = text
+                }
+                
+                if (parsedCaption.isBlank() && parsedHashtags.isBlank() && parsedDescription.isBlank()) {
                     parsedCaption = text
                 }
 
@@ -152,13 +156,13 @@ class MainViewModel : ViewModel() {
     fun analyzeLink(link: String) {
         if (link.isBlank()) return
         
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             _isAnalyzing.value = true
             _linkAnalysis.value = null
             _instaPostData.value = null
             
             // Generate deterministic analysis based on link string
-            val hash = link.hashCode().absoluteValue
+            val hash = link.hashCode() and 0x7FFFFFFF
             val score = 75 + (hash % 21) // 75 to 95
             
             val viewsMultiplier = (hash % 10) + 1
@@ -192,7 +196,7 @@ class MainViewModel : ViewModel() {
                     val req = InstaRequest(username = username)
                     val response = RetrofitClient.instagramService.getPosts(body = req).string()
                     _instaPostData.value = response.take(150) + "..." // Limit output for preview
-                } catch(e: Exception) {
+                } catch(e: Throwable) {
                     _instaPostData.value = "Error fetching posts for @$username: ${e.message}"
                 }
             }

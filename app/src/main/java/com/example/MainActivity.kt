@@ -92,14 +92,20 @@ fun ViralCaptionApp(viewModel: MainViewModel = viewModel()) {
             // Background Animation (Floating gradient blobs)
             AnimatedBackground()
             
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
+                    .padding(innerPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                item { Spacer(modifier = Modifier.height(32.dp)) }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 800.dp)
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 
                 item {
                     val titleGradient = Brush.horizontalGradient(
@@ -169,9 +175,7 @@ fun ViralCaptionApp(viewModel: MainViewModel = viewModel()) {
                                     .height(56.dp)
                                     .shadow(
                                         elevation = 16.dp, 
-                                        shape = RoundedCornerShape(24.dp), 
-                                        ambientColor = PurpleAccent, 
-                                        spotColor = PurpleAccent
+                                        shape = RoundedCornerShape(24.dp)
                                     )
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(
@@ -229,6 +233,7 @@ fun ViralCaptionApp(viewModel: MainViewModel = viewModel()) {
                     Spacer(modifier = Modifier.height(64.dp))
                 }
             }
+            }
         }
     }
 }
@@ -239,17 +244,23 @@ fun AnimatedBackground() {
         Box(
             modifier = Modifier
                 .offset(x = 100.dp, y = (-50).dp)
-                .size(200.dp)
-                .background(DarkPurpleBlur, shape = RoundedCornerShape(100.dp))
-                .blur(60.dp)
+                .size(300.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(DarkPurpleBlur, Color.Transparent)
+                    )
+                )
                 .align(Alignment.TopEnd)
         )
         Box(
             modifier = Modifier
                 .offset(x = (-50).dp, y = 50.dp)
-                .size(200.dp)
-                .background(CyanBlur, shape = RoundedCornerShape(100.dp))
-                .blur(60.dp)
+                .size(300.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(CyanBlur, Color.Transparent)
+                    )
+                )
                 .align(Alignment.BottomStart)
         )
     }
@@ -418,7 +429,9 @@ fun ResultCard(result: GeneratedContent, viewModel: MainViewModel) {
             // Caption Section
             if (result.caption.isNotBlank()) {
                 Text("Caption", color = PinkAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom=4.dp))
-                Text(result.caption, color = TextWhite, style = MaterialTheme.typography.bodyLarge)
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(result.caption, color = TextWhite, style = MaterialTheme.typography.bodyLarge)
+                }
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { 
@@ -439,7 +452,9 @@ fun ResultCard(result: GeneratedContent, viewModel: MainViewModel) {
             // Hashtags Section
             if (result.hashtags.isNotBlank()) {
                 Text("Hashtags", color = PinkAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom=4.dp))
-                Text(result.hashtags, color = CyanAccent, style = MaterialTheme.typography.bodyMedium)
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(result.hashtags, color = CyanAccent, style = MaterialTheme.typography.bodyMedium)
+                }
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { 
@@ -460,7 +475,9 @@ fun ResultCard(result: GeneratedContent, viewModel: MainViewModel) {
             // Description Section
             if (result.description.isNotBlank()) {
                 Text("Description / SEO", color = PinkAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom=4.dp))
-                Text(result.description, color = TextGray, style = MaterialTheme.typography.bodyMedium)
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(result.description, color = TextGray, style = MaterialTheme.typography.bodyMedium)
+                }
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = { 
